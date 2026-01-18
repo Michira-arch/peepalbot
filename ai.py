@@ -44,18 +44,21 @@ COURSE_DATA = """
 1. Diploma in Peri-operative Theatre Technology
 2. Diploma in Community Health and Development
 3. Diploma in Counselling Psychology
+Diploma courses take 2 years in total, 4 semesters.
 
 # certificate courses
 1. Certificate in Peri-operative Theatre Technology
 2. Certificate in Community Health and Development
 3. Certificate in Counselling Psychology
 4. Certificate in Nursing Assistant(Health Support Services/CNA)
+Certificate courses take 1 year in total, 3 trimesters
 
 # short courses
-1. Community Health and Development
-2. caregiving
-3. Homecare
-4. computer application for healthcare professionals.
+1. Community Health and Development (6 months)
+2. caregiving (6 months)
+3. Homecare (6 months)
+4. computer application for healthcare professionals.(3 months)
+short courses take 3 - 6 months
 
 # Entry grades
 diploma courses: KCSE mean grade C- (minus) and above
@@ -67,6 +70,14 @@ upcoming courses:
 2. Certificate in Medical Laboratory Technology
 3. Certificate in Pharmacy Technology
 4. Nursing
+
+Most requested courses in descening order are;
+1. Certified Nurse Assistant(CNA/HSS)
+2. Peri-operative theater technology
+3. Caregiving
+4. Medicine computer application.
+5. Nursing
+
 """
 
 def get_nairobi_time():
