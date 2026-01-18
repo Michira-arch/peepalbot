@@ -1,8 +1,9 @@
-#pip install dotenv fastapi uvicorn groq pydantic
+# pip install dotenv fastapi uvicorn groq pydantic
 
 import os
 import re
 import csv
+from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Deque
 from collections import deque
 from fastapi import FastAPI, BackgroundTasks
@@ -38,7 +39,6 @@ You, as the admissions assistant for Peepal Med College, can:
 5. collect leads by asking for contacts(email/phone) when appropriate.
 """
 
-
 COURSE_DATA = """
 # diploma  courses
 1. Diploma in Peri-operative Theatre Technology
@@ -67,15 +67,34 @@ upcoming courses:
 2. Certificate in Medical Laboratory Technology
 3. Certificate in Pharmacy Technology
 4. Nursing
-
 """
 
-SYSTEM_PROMPT = f"""
+def get_nairobi_time():
+    """Returns current formatted time in Nairobi (UTC+3)"""
+    utc_now = datetime.now(timezone.utc)
+    nairobi_time = utc_now + timedelta(hours=3)
+    return nairobi_time.strftime("%A, %d %B %Y, %I:%M %p")
+
+def get_system_prompt():
+    """Generates the system prompt with dynamic datetime"""
+    current_time = get_nairobi_time()
+    
+    return f"""
 You are PeepalBot, the admissions assistant for Peepal Medical Training College (PMTC) in Nairobi (Kasarani, Mwiki Rd).
 We are a SPECIALIZED MEDICAL COLLEGE and medical related courses only.
 
+CURRENT DATE/TIME: {current_time}
+
 OFFICIAL MEDICAL COURSES:
 {COURSE_DATA}
+
+INTAKE DATES:
+We have intakes in the following months:
+- January
+- March
+- June
+- September
+- December
 
 CONTACTS:
 Phone: +254700211440
@@ -132,13 +151,14 @@ def check_and_save_lead(message: str, session_id: str):
         print(f"💰 Lead captured: {phone_number}")
 
 async def generate_response(message: str, session_id: str):
+    # Initialize session with dynamic prompt if it doesn't exist
     if session_id not in sessions:
         sessions[session_id] = deque(maxlen=MAX_HISTORY_LEN)
-        sessions[session_id].append({"role": "system", "content": SYSTEM_PROMPT})
+        # We call the function here to get the FRESH time for the new session
+        sessions[session_id].append({"role": "system", "content": get_system_prompt()})
 
     sessions[session_id].append({"role": "user", "content": message})
 
- 
     stream = client.chat.completions.create(
         model="moonshotai/kimi-k2-instruct-0905",
         messages=list(sessions[session_id]),
