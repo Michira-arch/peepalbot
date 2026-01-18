@@ -1,1 +1,6 @@
-fastapi uvicorn groq pydantic python-dotenv
+fastapi
+uvicorn
+groq
+python-dotenv
+pydantic
+httpx
