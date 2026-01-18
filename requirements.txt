@@ -1,1 +1,1 @@
-fastapiuvicorn[standard]groqpydanticpython-dotenv
+fastapi uvicorn groq pydantic python-dotenv
