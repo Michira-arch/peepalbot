@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peepal Admissions Assistant</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Markdown Parser -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- HTML Sanitizer (Security) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+    <style>
+        :root {
+            --sidebar-bg: #0f172a;
+            --sidebar-text: #e2e8f0;
+            --main-bg: #f8fafc;
+            --accent-color: #2563eb; /* Medical Blue */
+            --user-msg-bg: #2563eb;
+            --user-msg-text: #ffffff;
+            --bot-msg-bg: #ffffff;
+            --bot-msg-text: #1e293b;
+            --border-color: #e2e8f0;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            height: 100vh;
+            display: flex;
+            background-color: var(--main-bg);
+            overflow: hidden; /* Prevent body scroll, handle in chat box */
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: 300px;
+            background-color: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            border-right: 1px solid #334155;
+            transition: transform 0.3s ease;
+        }
+
+        .brand {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .info-card h4 { color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px; }
+        .info-card p { margin-bottom: 5px; display: flex; align-items: center; gap: 8px; }
+
+        .btn-home {
+            margin-top: auto;
+            background: transparent;
+            border: 1px solid #475569;
+            color: white;
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+        }
+        .btn-home:hover { background: rgba(255,255,255,0.1); border-color: white; }
+
+        /* --- MAIN CHAT AREA --- */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .chat-header {
+            padding: 15px 20px;
+            background: white;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 60px;
+        }
+
+        .chat-header h2 { font-size: 1.1rem; color: #334155; }
+        .status-badge { 
+            font-size: 0.8rem; background: #dcfce7; color: #166534; 
+            padding: 4px 12px; border-radius: 20px; font-weight: 500; 
+        }
+
+        /* --- MESSAGES LIST --- */
+        #chat-history {
+            flex: 1;
+            padding: 20px 10%; /* Center content slightly on large screens */
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .message {
+            display: flex;
+            flex-direction: column;
+            max-width: 80%;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            align-items: flex-end;
+        }
+
+        .message.bot {
+            align-self: flex-start;
+            align-items: flex-start;
+        }
+
+        .bubble {
+            padding: 12px 18px;
+            border-radius: 12px;
+            font-size: 1rem;
+            line-height: 1.6;
+            position: relative;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            /* Removed white-space: pre-wrap; to allow Markdown to handle spacing */
+            word-wrap: break-word;
+        }
+
+        /* --- MARKDOWN STYLES WITHIN BUBBLE --- */
+        .bubble p { margin-bottom: 10px; }
+        .bubble p:last-child { margin-bottom: 0; }
+        .bubble ul, .bubble ol { margin-left: 20px; margin-bottom: 10px; }
+        .bubble li { margin-bottom: 5px; }
+        .bubble strong { font-weight: 700; }
+        .bubble em { font-style: italic; }
+        .bubble h1, .bubble h2, .bubble h3 { 
+            font-size: 1.1em; 
+            font-weight: 700; 
+            margin-top: 10px; 
+            margin-bottom: 5px; 
+        }
+        .bubble code {
+            background: rgba(0,0,0,0.1);
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        .bubble pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 10px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-bottom: 10px;
+        }
+        .bubble pre code {
+            background: transparent;
+            padding: 0;
+            color: inherit;
+        }
+        .bubble a { color: inherit; text-decoration: underline; }
+
+        .user .bubble {
+            background-color: var(--user-msg-bg);
+            color: var(--user-msg-text);
+            border-bottom-right-radius: 2px;
+        }
+        /* User bubble links */
+        .user .bubble a { color: white; }
+        .user .bubble code { background: rgba(255,255,255,0.2); }
+
+        .bot .bubble {
+            background-color: var(--bot-msg-bg);
+            color: var(--bot-msg-text);
+            border-bottom-left-radius: 2px;
+            border: 1px solid var(--border-color);
+        }
+
+        .sender-name {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-bottom: 4px;
+            margin-left: 4px;
+        }
+
+        /* --- INPUT AREA --- */
+        .input-container {
+            background: white;
+            padding: 20px 10%;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            gap: 10px;
+            background: var(--main-bg);
+            padding: 8px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            transition: border-color 0.2s;
+        }
+
+        .input-wrapper:focus-within { border-color: var(--accent-color); }
+
+        textarea {
+            flex: 1;
+            border: none;
+            background: transparent;
+            resize: none;
+            padding: 10px;
+            font-family: inherit;
+            font-size: 1rem;
+            outline: none;
+            max-height: 100px;
+        }
+
+        button#send-btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            width: 45px;
+            height: 45px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        button#send-btn:hover { background-color: #1d4ed8; }
+        button#send-btn:disabled { background-color: #94a3b8; cursor: not-allowed; }
+
+        /* --- TYPING INDICATOR --- */
+        .typing {
+            display: none;
+            margin-left: 10px;
+        }
+        .typing span {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background-color: #94a3b8;
+            border-radius: 50%;
+            animation: typing 1s infinite;
+            margin-right: 3px;
+        }
+        .typing span:nth-child(2) { animation-delay: 0.2s; }
+        .typing span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing { 0% { transform: translateY(0); } 50% { transform: translateY(-5px); } 100% { transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- MOBILE RESPONSIVE --- */
+        @media (max-width: 768px) {
+            .sidebar { display: none; } /* Hide sidebar on mobile for focus */
+            #chat-history { padding: 20px; }
+            .input-container { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR: Context & School Info -->
+    <aside class="sidebar">
+        <div class="brand">
+            <i class="fa-solid fa-user-doctor"></i> Peepal Admissions
+        </div>
+
+        <div class="info-card">
+            <h4>Location</h4>
+            <p><i class="fa-solid fa-location-dot"></i> Kasarani, Mwiki Road</p>
+            <p><i class="fa-solid fa-city"></i> Nairobi, Kenya</p>
+        </div>
+
+        <div class="info-card">
+            <h4>Contact Us</h4>
+            <p><i class="fa-solid fa-phone"></i> +254 700 211 440</p>
+            <p><i class="fa-solid fa-envelope"></i> peepalmedcollege@gmail.com</p>
+        </div>
+
+        <!-- Link back to main marketing website -->
+        <a href="https://peepalweb1.web.app/" class="btn-home">
+            <i class="fa-solid fa-arrow-left"></i> Back to Website
+        </a>
+    </aside>
+
+    <!-- MAIN CHAT INTERFACE -->
+    <main class="main-content">
+        <header class="chat-header">
+            <h2>Admissions Assistant (AI)</h2>
+            <span class="status-badge">Online</span>
+        </header>
+
+        <div id="chat-history">
+            <!-- Welcome Message -->
+            <div class="message bot">
+                <span class="sender-name">PeepalBot</span>
+                <div class="bubble">Habari! 👋 I am the AI assistant for Peepal Medical College.<br><br>I can help you with:<br>• Course details & Fees<br>• Intake dates<br>• Application process<br><br>How can I help you today?</div>
+            </div>
+            
+            <!-- Typing Indicator -->
+            <div class="message bot typing" id="typing-indicator">
+                <div class="bubble">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-container">
+            <div class="input-wrapper">
+                <textarea id="user-input" rows="1" placeholder="Ask about Nursing, Fees, Location..." onkeydown="handleEnter(event)"></textarea>
+                <button id="send-btn" onclick="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // 1. Session Management
+        const sessionId = localStorage.getItem('peepal_session') || Math.random().toString(36).substring(2);
+        localStorage.setItem('peepal_session', sessionId);
+
+        const chatHistory = document.getElementById('chat-history');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const typingIndicator = document.getElementById('typing-indicator');
+
+        // Configure Marked.js to break on newlines (like GitHub comments)
+        marked.use({
+            breaks: true,
+            gfm: true
+        });
+
+        // 2. Auto-Resize Textarea
+        userInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+            if(this.value === '') this.style.height = 'auto';
+        });
+
+        function handleEnter(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        }
+
+        // 3. Main Send Function
+        async function sendMessage() {
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            // UI Updates
+            userInput.value = '';
+            userInput.style.height = 'auto';
+            appendMessage('user', text);
+            showTyping(true);
+            sendBtn.disabled = true;
+
+            try {
+                // Prepare Bot Bubble
+                const botBubble = appendMessage('bot', ''); // Empty bubble to fill
+                const streamUrl = "http://127.0.0.1:8000/chat"; // CHANGE THIS FOR PRODUCTION
+
+                const response = await fetch(streamUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: text, session_id: sessionId })
+                });
+
+                showTyping(false);
+
+                if (!response.ok) throw new Error("Network response was not ok");
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let botResponseText = "";
+
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    const chunk = decoder.decode(value);
+                    botResponseText += chunk;
+
+                    // LIVE MARKDOWN RENDERING
+                    // We parse the entire accumulated string every time a chunk arrives.
+                    // DOMPurify ensures no malicious scripts are injected by the AI or user.
+                    botBubble.innerHTML = DOMPurify.sanitize(marked.parse(botResponseText));
+                    
+                    scrollToBottom();
+                }
+
+            } catch (error) {
+                showTyping(false);
+                appendMessage('bot', "⚠️ Samahani, I'm having trouble connecting. Please try again or call our support line.");
+                console.error(error);
+            } finally {
+                sendBtn.disabled = false;
+                userInput.focus();
+            }
+        }
+
+        // 4. Helper: Append Message to DOM
+        function appendMessage(sender, text) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${sender}`;
+            
+            // Only show name for Bot
+            const nameHtml = sender === 'bot' ? '<span class="sender-name">PeepalBot</span>' : '';
+            
+            // Process initial text (if any)
+            let contentHtml = text;
+            if (sender === 'bot' && text) {
+                contentHtml = DOMPurify.sanitize(marked.parse(text));
+            } else if (sender === 'user') {
+                // For user, we just escape HTML to prevent injection, but no markdown
+                const tempDiv = document.createElement('div');
+                tempDiv.textContent = text;
+                contentHtml = tempDiv.innerHTML.replace(/\n/g, '<br>');
+            }
+
+            msgDiv.innerHTML = `
+                ${nameHtml}
+                <div class="bubble">${contentHtml}</div>
+            `;
+
+            // Insert before typing indicator
+            chatHistory.insertBefore(msgDiv, typingIndicator);
+            scrollToBottom();
+            
+            // Return the bubble element so we can stream into it
+            return msgDiv.querySelector('.bubble');
+        }
+
+        function showTyping(show) {
+            typingIndicator.style.display = show ? 'flex' : 'none';
+            // Move typing indicator to the very bottom
+            chatHistory.appendChild(typingIndicator);
+            scrollToBottom();
+        }
+
+        function scrollToBottom() {
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+    </script>
+</body>
+</html>
