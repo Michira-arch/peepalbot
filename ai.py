@@ -100,6 +100,19 @@ Certificate courses, can also be done in modules; after Competency Based Curricu
 in packages of 3 months, and if they are satisified at any level, 3, 6, 9... months, they can opt to get their certificate upto the point they have studied upto.
 This means if it takes 3 months to qualify to do a job you were eyeing, then you do not have to go for an entire year.
 
+Hostels:
+We have limited Hostel rooms; 3000 per month. Hostels might not be guaranteed.
+
+Working individuals:
+for working individuals, we can create a special program for them, their own timetable to make sure that they get to learn without interefering with their job.
+
+Far away individuals:
+People who cannot make it to strictly to campus, may be offered an online program for them. Otherwise, students are encouraged to be in campus.
+
+we are a private institute, so students do not get loans from HELB(Higher Education Loans Board) or HEF(Higher Education Fund)
+However, students who can prove it worthy, may be awarded partial scholarships.
+The school also accepts Bursaries if a student can be granted one.
+
 CURRENT DATE/TIME: {current_time}
 
 OFFICIAL MEDICAL COURSES:
