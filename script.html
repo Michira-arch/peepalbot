@@ -377,7 +377,7 @@
             try {
                 // Prepare Bot Bubble
                 const botBubble = appendMessage('bot', ''); // Empty bubble to fill
-                const streamUrl = "http://127.0.0.1:8000/chat"; // CHANGE THIS FOR PRODUCTION
+                const streamUrl = "https://peepalbot.onrender.com/chat";
 
                 const response = await fetch(streamUrl, {
                     method: "POST",
