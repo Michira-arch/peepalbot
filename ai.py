@@ -2,7 +2,7 @@
 
 import os
 import re
-import csv
+# import csv  <-- DISABLED: Vercel file system is Read-Only
 from datetime import datetime, timezone, timedelta
 from typing import Dict, Deque
 from collections import deque
@@ -28,8 +28,6 @@ app.add_middleware(
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 # CONFIGURATION
-# This controls how many User/Assistant exchanges we keep.
-# The System prompt is now handled separately, so it won't count towards this limit.
 MAX_HISTORY_LEN = 20 
 
 app_context = """
@@ -229,22 +227,12 @@ def check_and_save_lead(message: str, session_id: str):
     
     if match:
         phone_number = match.group()
-        file_exists = os.path.isfile('leads.csv')
-        with open('leads.csv', 'a', newline='') as csvfile:
-            fieldnames = ['session_id', 'phone', 'full_message']
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            if not file_exists:
-                writer.writeheader()
-            writer.writerow({
-                'session_id': session_id,
-                'phone': phone_number,
-                'full_message': message
-            })
-        print(f"💰 Lead captured: {phone_number}")
+        # VERCEL FIX: Log to console instead of writing to file
+        # To persist this, you must send it to Supabase or an external API.
+        print(f"💰 LEAD CAPTURED: {phone_number} (Session: {session_id})")
 
 async def generate_response(message: str, session_id: str):
     # Initialize session history deque if it doesn't exist.
-    # We DO NOT add the system prompt to the deque anymore.
     if session_id not in sessions:
         sessions[session_id] = deque(maxlen=MAX_HISTORY_LEN)
 
@@ -252,11 +240,7 @@ async def generate_response(message: str, session_id: str):
     sessions[session_id].append({"role": "user", "content": message})
 
     # 2. Construct the full message list for the LLM
-    # We generate a FRESH system prompt every time (keeps time current)
-    # and put it at the very front of the list.
     system_instruction = {"role": "system", "content": get_system_prompt()}
-    
-    # Payload = [System Prompt] + [Conversation History]
     messages_payload = [system_instruction] + list(sessions[session_id])
 
     stream = client.chat.completions.create(
