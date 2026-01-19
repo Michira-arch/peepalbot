@@ -30,13 +30,67 @@ client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 # CONFIGURATION
 MAX_HISTORY_LEN = 20 
 
-peepal_bot_abilities = """
-You, as the admissions assistant for Peepal Med College, can:
-1. Provide information about the medical courses offered at Peepal Med College.
-2. make recommendations on courses based on user interests.
-3. Provide details on entry requirements for each course.
-4. Share contact information and application procedures.
-5. collect leads by asking for contacts(email/phone) when appropriate.
+app_context = """
+Peepal applications Portal App Context: PEEPAL Medical Training College
+1. Interface & Experience
+Type: Multi-step Online Application Wizard (9 Steps).
+Visual Style: "Royal Blue" (#4169E1) and "Light Blue" (#ADD8E6) theme.
+Feedback Mechanisms: * Progress bar (percentage based).
+Shake animation on validation error.
+Live field validation (Green check/Red X icons) for Email and Mobile.
+
+2. Workflow & Data Collection
+
+Step 1: Personal Data
+Fields: First Name, Middle Name, Surname, Date of Birth (YYYY-MM-DD), Gender (Male/Female), ID/Passport No., Nationality, Country of Residence, Religion.
+Conditional Logic: If Marital Status is "Other", a specification text field appears.
+
+Step 2: Contact Details
+
+Fields: Postal Address, Postal Code, Town, Home/Office Tel.
+Strict Validation: * Mobile Number: Regex ^\+?[0-9]{10,15}$
+Email: Standard email regex.
+
+Step 3: Next of Kin
+Fields: Full Name, Relationship, Postal Address, Mobile Number, Email Address.
+
+Step 4: Course Selection
+Functionality: Dropdown selection that dynamically displays the associated fee.
+Course Options & Fees:
+{course list dropdown}
+
+Step 5: Academic Details
+Fields: KCSE Mean Grade, KCSE Year, Intake (Jan/Mar/Jun/Sep).
+Conditional Logic: "Have you ever been discontinued?" (Yes/No). If Yes, a text area for "Institution and Reason" appears.
+
+Step 6: Medical History
+Booleans: Medical Condition, Food Allergy, Drug Allergy, Disability.
+Conditional Logic: If any of the above are "Yes", a "Support Required" text area appears.
+
+Step 7: Financial Sponsorship
+Sponsor Types: Self, Parent, Guardian/Sponsor.
+Conditional Logic: If sponsor is NOT "Self", a "Payer Information" section appears (Name, Relation, Address, Mobile, Email).
+
+Step 8: Document Uploads
+Constraints: Max file size 5MB.
+Required Files:
+National ID/Passport: Accepts .pdf (Preview: icon).
+KCSE Certificate/Slip: Accepts .pdf, .jpg, .png (Preview: image).
+Birth Certificate: Accepts .pdf, .jpg, .png (Preview: image).
+
+Step 9: Review & Submit
+Action: Generates a read-only summary of all data entered.
+Disclaimer: Notes that application fee payment details are sent via email after submission.
+
+3. Technical Implementation & Backend
+Supabase Integration
+Auth: Uses Anonymous Sign-In (signInAnonymously) to establish a session.
+Storage: Uploads files to application_files bucket under path {user.id}/{file_type}-{filename}.
+Database: Inserts form data + file URLs into the applications table.
+
+Client-Side Processing
+PDF Generation: Uses html2canvas and jspdf to capture the "Summary" view as an image and generate a downloadable PDF (PMTC_Application_{Name}.pdf) upon successful submission.
+Dependencies: TailwindCSS (CDN), Supabase JS (CDN), jsPDF (CDN), html2canvas (CDN).
 """
 
 COURSE_DATA = """
