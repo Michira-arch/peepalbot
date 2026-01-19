@@ -4,7 +4,7 @@ import os
 import re
 import csv
 from datetime import datetime, timezone, timedelta
-from typing import Dict, List, Deque
+from typing import Dict, Deque
 from collections import deque
 from fastapi import FastAPI, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
@@ -28,6 +28,8 @@ app.add_middleware(
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 # CONFIGURATION
+# This controls how many User/Assistant exchanges we keep.
+# The System prompt is now handled separately, so it won't count towards this limit.
 MAX_HISTORY_LEN = 20 
 
 app_context = """
@@ -241,18 +243,26 @@ def check_and_save_lead(message: str, session_id: str):
         print(f"💰 Lead captured: {phone_number}")
 
 async def generate_response(message: str, session_id: str):
-    # Initialize session with dynamic prompt if it doesn't exist
+    # Initialize session history deque if it doesn't exist.
+    # We DO NOT add the system prompt to the deque anymore.
     if session_id not in sessions:
         sessions[session_id] = deque(maxlen=MAX_HISTORY_LEN)
-        # We call the function here to get the FRESH time for the new session
-        sessions[session_id].append({"role": "system", "content": get_system_prompt()})
 
+    # 1. Append the new user message to the history buffer
     sessions[session_id].append({"role": "user", "content": message})
+
+    # 2. Construct the full message list for the LLM
+    # We generate a FRESH system prompt every time (keeps time current)
+    # and put it at the very front of the list.
+    system_instruction = {"role": "system", "content": get_system_prompt()}
+    
+    # Payload = [System Prompt] + [Conversation History]
+    messages_payload = [system_instruction] + list(sessions[session_id])
 
     stream = client.chat.completions.create(
         model="moonshotai/kimi-k2-instruct-0905",
-        messages=list(sessions[session_id]),
-        temperature=0.5, # Keep temp very low to prevent hallucinating fake courses
+        messages=messages_payload,
+        temperature=0.5, 
         max_tokens=512,
         stream=True
     )
@@ -264,6 +274,7 @@ async def generate_response(message: str, session_id: str):
             full_response += content
             yield content
 
+    # 3. Append the assistant's full response to the history buffer
     sessions[session_id].append({"role": "assistant", "content": full_response})
 
 @app.post("/chat")
