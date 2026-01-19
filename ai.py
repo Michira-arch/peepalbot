@@ -129,7 +129,7 @@ We have intakes in the following months:
 CONTACTS:
 Phone: +254700211440
 Email: peepalmedcollege@gmail.com
-Signup Link: https://peepalweb1.web.app/
+Signup Link: https://peepal-web.web.app/
 website: https://peepal-mtc.onrender.com/
 whatsapp: https://wa.me/254700211440
 
