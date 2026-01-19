@@ -2,9 +2,9 @@
 
 import os
 import re
-# import csv  <-- DISABLED: Vercel file system is Read-Only
+import csv
 from datetime import datetime, timezone, timedelta
-from typing import Dict, Deque, Optional
+from typing import Dict, Deque
 from collections import deque
 from fastapi import FastAPI, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
@@ -25,20 +25,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- VERCEL FIX: LAZY LOAD CLIENT ---
-# We initialize this as None to prevent "GroqError" during Vercel's build phase.
-# The client will be created the first time a user actually sends a message.
-client: Optional[Groq] = None
-
-def get_groq_client():
-    global client
-    if client is None:
-        api_key = os.getenv("GROQ_API_KEY")
-        if not api_key:
-            print("CRITICAL ERROR: GROQ_API_KEY is missing in environment variables.")
-            return None
-        client = Groq(api_key=api_key)
-    return client
+# Standard Client Initialization (Works fine on Render)
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 # CONFIGURATION
 MAX_HISTORY_LEN = 20 
@@ -240,9 +228,23 @@ def check_and_save_lead(message: str, session_id: str):
     
     if match:
         phone_number = match.group()
-        # VERCEL FIX: Log to console instead of writing to file
-        # To persist this, you must send it to Supabase or an external API.
-        print(f"💰 LEAD CAPTURED: {phone_number} (Session: {session_id})")
+        
+        # RESTORED: Writing to leads.csv (Works on Render)
+        file_exists = os.path.isfile('leads.csv')
+        try:
+            with open('leads.csv', 'a', newline='') as csvfile:
+                fieldnames = ['session_id', 'phone', 'full_message']
+                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                if not file_exists:
+                    writer.writeheader()
+                writer.writerow({
+                    'session_id': session_id,
+                    'phone': phone_number,
+                    'full_message': message
+                })
+            print(f"💰 Lead captured and saved to CSV: {phone_number}")
+        except Exception as e:
+            print(f"Error saving lead: {e}")
 
 async def generate_response(message: str, session_id: str):
     # Initialize session history deque if it doesn't exist.
@@ -253,16 +255,11 @@ async def generate_response(message: str, session_id: str):
     sessions[session_id].append({"role": "user", "content": message})
 
     # 2. Construct the full message list for the LLM
+    # This preserves the fix where System Prompt is always fresh and never lost.
     system_instruction = {"role": "system", "content": get_system_prompt()}
     messages_payload = [system_instruction] + list(sessions[session_id])
 
-    # 3. Get Groq client securely
-    current_client = get_groq_client()
-    if not current_client:
-        yield "System Error: The AI service is currently unavailable (Missing API Key)."
-        return
-
-    stream = current_client.chat.completions.create(
+    stream = client.chat.completions.create(
         model="moonshotai/kimi-k2-instruct-0905",
         messages=messages_payload,
         temperature=0.5, 
@@ -277,11 +274,10 @@ async def generate_response(message: str, session_id: str):
             full_response += content
             yield content
 
-    # 4. Append the assistant's full response to the history buffer
+    # 3. Append the assistant's full response to the history buffer
     sessions[session_id].append({"role": "assistant", "content": full_response})
 
 @app.post("/chat")
 async def chat(req: ChatRequest, background_tasks: BackgroundTasks):
-
     background_tasks.add_task(check_and_save_lead, req.message, req.session_id)
     return StreamingResponse(generate_response(req.message, req.session_id), media_type="text/plain")
