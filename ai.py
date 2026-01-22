@@ -277,6 +277,11 @@ async def generate_response(message: str, session_id: str):
     # 3. Append the assistant's full response to the history buffer
     sessions[session_id].append({"role": "assistant", "content": full_response})
 
+@app.get("/wake")
+async def wake_up():
+    """Lightweight endpoint to keep the server awake."""
+    return {"status": "alive", "time": datetime.now(timezone.utc)}
+
 @app.post("/chat")
 async def chat(req: ChatRequest, background_tasks: BackgroundTasks):
     background_tasks.add_task(check_and_save_lead, req.message, req.session_id)
