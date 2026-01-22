@@ -280,7 +280,11 @@ async def generate_response(message: str, session_id: str):
 @app.get("/wake")
 async def wake_up():
     """Lightweight endpoint to keep the server awake."""
-    return {"status": "alive", "time": datetime.now(timezone.utc)}
+    # Use your existing helper function to get Nairobi time
+    return {
+        "status": "alive", 
+        "time": get_nairobi_time() 
+    }
 
 @app.post("/chat")
 async def chat(req: ChatRequest, background_tasks: BackgroundTasks):
