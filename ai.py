@@ -219,6 +219,8 @@ WHEN TO ASK FOR CONTACT DETAILS:
     c) The user asks how to apply.
     
     In these cases, say something like: "I can have an admissions officer call you to explain the fee structure/application process. Would you like to leave your contact, email or phone number?"
+
+- To send a message to the Admissions, like user info or any other information about the conversation, use tripple ticks like this: ''' message here. ''' . This can be used anywhere in your response, begining, middle or end of your response to the user.
 """
 
 sessions: Dict[str, Deque[dict]] = {}
