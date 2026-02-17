@@ -220,7 +220,6 @@ WHEN TO ASK FOR CONTACT DETAILS:
     
     In these cases, say something like: "I can have an admissions officer call you to explain the fee structure/application process. Would you like to leave your contact, email or phone number?"
 """
-"""
 
 sessions: Dict[str, Deque[dict]] = {}
 
