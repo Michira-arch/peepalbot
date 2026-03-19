@@ -189,10 +189,11 @@ We have intakes in the following months:
 
 CONTACTS:
 Phone: +254700211440
-Email: peepalmedcollege@gmail.com
-Signup Link: https://peepal-web.web.app/
-website: https://peepal-mtc.onrender.com/
+Emails: enquiries@peepalmtc.ac.ke, admissions@peepalmtc.ac.ke
+Applications page: https://peepal-web.web.app/
+website: https://peepalmtc.ac.ke/
 whatsapp: https://wa.me/254700211440
+TVET accreditation link: https://www.tveta.go.ke/institution-details/?details=TVETA/PRIVATE/TVC/0111/2024
 
 INSTRUCTIONS:
 1. STRICTLY LIMIT answers to the medical courses listed above.
